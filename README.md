@@ -1,31 +1,30 @@
 # Taskdoc
 
-A collaborative team task management platform where admins can create projects, assign tasks, and manage team members, while members can track and update their work.
+Taskdoc is a team task management app built around the kind of workflow a small team might actually use: projects, members, assigned tasks, due dates, status updates, and a dashboard for keeping an eye on progress.
 
-Built as a portfolio project to demonstrate full-stack skills with FastAPI, React, and MySQL.
+I built it as a full-stack portfolio project using FastAPI, React, and MySQL. The goal was not to make a huge project management suite, but to build a clean and practical SaaS-style app with authentication, role-based access, useful APIs, and a responsive interface.
 
 ---
 
 ## Tech Stack
 
-**Frontend:** React (Vite), Tailwind CSS, React Router DOM, Axios  
-**Backend:** FastAPI, SQLAlchemy, Pydantic, JWT (python-jose), Passlib/Bcrypt  
+**Frontend:** React, Vite, Tailwind CSS, React Router DOM, Axios  
+**Backend:** FastAPI, SQLAlchemy, Pydantic, python-jose, Passlib/Bcrypt  
 **Database:** MySQL  
 **Deployment:** Railway
 
 ---
 
-## Features
+## What It Does
 
-- JWT-based auth with signup/login
-- Role-based access control (admin vs member)
-- Project creation and team membership management
-- Task creation, assignment, priority, status, and due dates
-- Overdue task detection
-- Dashboard with task stats and upcoming deadlines
-- Dedicated task workspace with filters and status updates
-- Profile editing for account details
-- Responsive UI with collapsible sidebar
+- Users can sign up, log in, and stay authenticated with JWT tokens.
+- Admins can create projects, add team members, assign tasks, and manage project work.
+- Members can view their assigned work and update task progress.
+- Tasks support status, priority, due dates, and overdue tracking.
+- The dashboard shows useful task stats and upcoming deadlines.
+- The task workspace includes filters for easier day-to-day use.
+- Users can update basic profile details.
+- The layout works across desktop, tablet, and mobile screens.
 
 ---
 
@@ -38,34 +37,53 @@ cd backend
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
+```
 
-# create a .env file and add your MySQL credentials
+Create a `.env` file inside `backend` with your MySQL credentials, then run:
 
+```bash
 uvicorn app.main:app --reload
 ```
 
-The API will be available at `http://localhost:8000`.  
-Interactive docs: `http://localhost:8000/docs`
+The API runs at:
+
+```text
+http://localhost:8000
+```
+
+FastAPI docs are available at:
+
+```text
+http://localhost:8000/docs
+```
 
 ### Frontend
 
 ```bash
 cd frontend
 npm install
-
-# optional: create .env with VITE_API_URL=http://localhost:8000
-
 npm run dev
 ```
 
-App runs at `http://localhost:5173`.
+The frontend runs at:
+
+```text
+http://localhost:5173
+```
+
+If your backend is running somewhere else, add this to `frontend/.env`:
+
+```env
+VITE_API_URL=http://localhost:8000
+```
 
 ---
 
 ## Environment Variables
 
 ### Backend `.env`
-```
+
+```env
 DB_HOST=localhost
 DB_PORT=3306
 DB_USER=root
@@ -77,7 +95,8 @@ ACCESS_TOKEN_EXPIRE_MINUTES=60
 ```
 
 ### Frontend `.env`
-```
+
+```env
 VITE_API_URL=http://localhost:8000
 ```
 
@@ -85,12 +104,13 @@ VITE_API_URL=http://localhost:8000
 
 ## Database
 
-Tables are auto-created when the backend starts (SQLAlchemy `create_all`).  
-Just make sure the database `taskdoc_db` exists in MySQL:
+Create the MySQL database before starting the backend:
 
 ```sql
 CREATE DATABASE taskdoc_db;
 ```
+
+The tables are created automatically when the backend starts through SQLAlchemy's `create_all`.
 
 ---
 
@@ -99,32 +119,34 @@ CREATE DATABASE taskdoc_db;
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | POST | `/auth/signup` | Register a new user |
-| POST | `/auth/login` | Login, get JWT token |
-| GET | `/auth/me` | Get current user info |
-| GET | `/projects` | List accessible projects |
-| POST | `/projects` | Create project (admin) |
+| POST | `/auth/login` | Log in and receive a JWT token |
+| GET | `/auth/me` | Get the logged-in user's details |
+| GET | `/projects` | List projects the user can access |
+| POST | `/projects` | Create a project |
 | GET | `/projects/{id}` | Get project details |
-| DELETE | `/projects/{id}` | Delete project (admin) |
+| DELETE | `/projects/{id}` | Delete a project |
 | GET | `/projects/{id}/members` | List project members |
-| POST | `/projects/{id}/members` | Add member (admin) |
-| DELETE | `/projects/{id}/members/{uid}` | Remove member (admin) |
+| POST | `/projects/{id}/members` | Add a project member |
+| DELETE | `/projects/{id}/members/{uid}` | Remove a project member |
 | GET | `/tasks?project_id=` | List tasks |
-| POST | `/tasks` | Create task (admin) |
-| PUT | `/tasks/{id}` | Update task |
-| DELETE | `/tasks/{id}` | Delete task (admin) |
-| GET | `/dashboard/stats` | Dashboard summary stats |
-| GET | `/users` | List all users (admin) |
-| PUT | `/users/me` | Update current user's profile |
+| POST | `/tasks` | Create a task |
+| PUT | `/tasks/{id}` | Update a task |
+| DELETE | `/tasks/{id}` | Delete a task |
+| GET | `/dashboard/stats` | Get dashboard stats |
+| GET | `/users` | List users |
+| PUT | `/users/me` | Update profile details |
+
+Some endpoints are role-protected. For example, project creation, member management, task assignment, and deletes are admin-only actions.
 
 ---
 
-## Deployment (Railway)
+## Deployment Notes
 
-Deploy this repo as an isolated monorepo with three Railway services:
+The project is set up to deploy on Railway as a small monorepo:
 
 1. MySQL database service
-2. Backend service with root directory `/backend`
-3. Frontend service with root directory `/frontend`
+2. Backend service with `/backend` as the root directory
+3. Frontend service with `/frontend` as the root directory
 
 Backend start command:
 
@@ -152,21 +174,21 @@ Frontend variables:
 VITE_API_URL=https://your-backend-domain.up.railway.app
 ```
 
-After both services have public domains, update `ALLOWED_ORIGINS` with the real frontend URL and redeploy the backend.
+After Railway gives public URLs to both services, update `ALLOWED_ORIGINS` with the actual frontend URL and redeploy the backend.
 
 ---
 
-## What I'd Add Next
+## Possible Improvements
 
 - Email notifications for task assignments
 - Task comments
-- File attachments on tasks
-- Activity log per project
-- Pagination on task lists
+- File attachments
+- Activity history for projects
+- Pagination for larger task lists
 - Dark mode
 
 ---
 
-## Notes
+## Project Scope
 
-The project is intentionally scoped for a realistic fresher-level build with clean architecture, consistent UI, and a practical feature set without overengineering.
+Taskdoc is intentionally kept at a realistic portfolio-project size. It focuses on the core pieces that matter in a team workflow: auth, roles, projects, tasks, validation, and a usable dashboard. I avoided heavier patterns like Redux, microservices, drag-and-drop boards, or real-time updates so the project stays readable and maintainable.
