@@ -30,15 +30,29 @@ export default function ProjectDetailPage() {
 
   const fetchAll = async () => {
     setError('')
+    setLoading(true)
     try {
-      const [projRes, tasksRes, membersRes] = await Promise.all([
-        api.get(`/projects/${id}`),
-        api.get(`/tasks?project_id=${id}`),
+      const projRes = await api.get(`/projects/${id}`)
+      setProject(projRes.data)
+
+      const [tasksResult, membersResult] = await Promise.allSettled([
+        api.get(`/tasks/?project_id=${id}`),
         api.get(`/projects/${id}/members`),
       ])
-      setProject(projRes.data)
-      setTasks(tasksRes.data)
-      setMembers(membersRes.data)
+
+      if (tasksResult.status === 'fulfilled') {
+        setTasks(tasksResult.value.data)
+      } else {
+        setTasks([])
+        setError('Project loaded, but tasks could not be loaded right now.')
+      }
+
+      if (membersResult.status === 'fulfilled') {
+        setMembers(membersResult.value.data)
+      } else {
+        setMembers([])
+        setError('Project loaded, but members could not be loaded right now.')
+      }
     } catch (err) {
       if (err.response?.status === 404 || err.response?.status === 403) {
         navigate('/projects')
@@ -121,6 +135,15 @@ export default function ProjectDetailPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
                 Task
+              </button>
+              <button
+                onClick={() => {
+                  setActiveTab('members')
+                  setShowAddMember(true)
+                }}
+                className="text-sm text-indigo-600 hover:bg-indigo-50 border border-indigo-200 px-3 py-2 rounded-lg transition-colors"
+              >
+                Add member
               </button>
               <button
                 onClick={handleDeleteProject}

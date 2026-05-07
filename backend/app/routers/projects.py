@@ -18,6 +18,7 @@ def is_project_member(db: Session, project_id: int, user_id: int) -> bool:
     ).first() is not None
 
 
+@router.post("", response_model=ProjectOut, status_code=201, include_in_schema=False)
 @router.post("/", response_model=ProjectOut, status_code=201)
 def create_project(
     body: ProjectCreate,
@@ -42,6 +43,7 @@ def create_project(
     return project
 
 
+@router.get("", response_model=List[ProjectOut], include_in_schema=False)
 @router.get("/", response_model=List[ProjectOut])
 def list_projects(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     if current_user.role == "admin":

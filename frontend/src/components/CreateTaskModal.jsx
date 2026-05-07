@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Modal from './Modal'
 import api from '../services/api'
 
 export default function CreateTaskModal({ projectId, members, onClose, onCreated }) {
+  const [projectMembers, setProjectMembers] = useState(members || [])
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -13,6 +14,20 @@ export default function CreateTaskModal({ projectId, members, onClose, onCreated
   })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [membersLoading, setMembersLoading] = useState(false)
+
+  useEffect(() => {
+    if (members?.length) {
+      setProjectMembers(members)
+      return
+    }
+
+    setMembersLoading(true)
+    api.get(`/projects/${projectId}/members`)
+      .then(res => setProjectMembers(res.data))
+      .catch(() => setError('Unable to load project members for assignment.'))
+      .finally(() => setMembersLoading(false))
+  }, [projectId, members])
 
   const handleChange = e => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
@@ -124,13 +139,19 @@ export default function CreateTaskModal({ projectId, members, onClose, onCreated
               name="assigned_to"
               value={form.assigned_to}
               onChange={handleChange}
+              disabled={membersLoading || projectMembers.length === 0}
               className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
-              <option value="">Unassigned</option>
-              {members.map(m => (
+              <option value="">
+                {membersLoading ? 'Loading members...' : projectMembers.length === 0 ? 'No members yet' : 'Unassigned'}
+              </option>
+              {projectMembers.map(m => (
                 <option key={m.id} value={m.id}>{m.name}</option>
               ))}
             </select>
+            {projectMembers.length === 0 && !membersLoading && (
+              <p className="text-xs text-slate-400 mt-1">Add members to this project before assigning tasks.</p>
+            )}
           </div>
         </div>
 

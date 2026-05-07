@@ -9,6 +9,7 @@ from app.middleware.auth import get_current_user, require_admin
 router = APIRouter(prefix="/users", tags=["users"])
 
 
+@router.get("", response_model=List[UserBrief], include_in_schema=False)
 @router.get("/", response_model=List[UserBrief])
 def list_users(
     db: Session = Depends(get_db),

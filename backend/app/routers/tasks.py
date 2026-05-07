@@ -19,6 +19,7 @@ def is_project_member(db: Session, project_id: int, user_id: int) -> bool:
     ).first() is not None
 
 
+@router.post("", response_model=TaskOut, status_code=201, include_in_schema=False)
 @router.post("/", response_model=TaskOut, status_code=201)
 def create_task(
     body: TaskCreate,
@@ -54,6 +55,7 @@ def create_task(
     return task
 
 
+@router.get("", response_model=List[TaskOut], include_in_schema=False)
 @router.get("/", response_model=List[TaskOut])
 def list_tasks(
     project_id: Optional[int] = None,
