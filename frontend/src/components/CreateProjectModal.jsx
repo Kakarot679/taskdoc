@@ -17,7 +17,7 @@ export default function CreateProjectModal({ onClose, onCreated }) {
     if (!form.title.trim()) { setError('Project name is required'); return }
     setLoading(true)
     try {
-      await api.post('/projects', {
+      await api.post('/projects/', {
         title: form.title.trim(),
         description: form.description.trim() || null,
       })

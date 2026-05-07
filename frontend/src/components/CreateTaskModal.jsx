@@ -34,7 +34,7 @@ export default function CreateTaskModal({ projectId, members, onClose, onCreated
 
     setLoading(true)
     try {
-      await api.post('/tasks', payload)
+      await api.post('/tasks/', payload)
       onCreated()
     } catch (err) {
       setError(err.response?.data?.detail || 'Failed to create task')

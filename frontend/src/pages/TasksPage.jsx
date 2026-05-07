@@ -51,8 +51,8 @@ export default function TasksPage() {
     setLoading(true)
     try {
       const [tasksRes, projectsRes] = await Promise.all([
-        api.get('/tasks'),
-        api.get('/projects'),
+        api.get('/tasks/'),
+        api.get('/projects/'),
       ])
       setTasks(tasksRes.data)
       setProjects(projectsRes.data)

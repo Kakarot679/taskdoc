@@ -70,7 +70,7 @@ export default function ProjectsPage() {
 
   const fetchProjects = () => {
     setError('')
-    api.get('/projects')
+    api.get('/projects/')
       .then(res => setProjects(res.data))
       .catch(() => setError('Unable to load projects right now.'))
       .finally(() => setLoading(false))

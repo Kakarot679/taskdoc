@@ -10,7 +10,7 @@ export default function AddMemberModal({ projectId, existingMembers, onClose, on
   const [usersLoading, setUsersLoading] = useState(true)
 
   useEffect(() => {
-    api.get('/users').then(res => {
+    api.get('/users/').then(res => {
       const existingIds = new Set(existingMembers.map(m => m.id))
       setAllUsers(res.data.filter(u => !existingIds.has(u.id)))
     }).catch(() => {
