@@ -12,6 +12,8 @@ class SignupRequest(BaseModel):
     def password_length(cls, v):
         if len(v) < 6:
             raise ValueError("Password must be at least 6 characters")
+        if len(v.encode("utf-8")) > 72:
+            raise ValueError("Password must be 72 bytes or fewer")
         return v
 
     @field_validator("name")
