@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List
 from app.database.db import get_db
 from app.models.project import Project, ProjectMember
+from app.models.task import Task
 from app.models.user import User
 from app.schemas.project import ProjectCreate, ProjectUpdate, ProjectOut, AddMemberRequest
 from app.schemas.user import UserBrief
@@ -52,7 +53,13 @@ def list_projects(db: Session = Depends(get_db), current_user: User = Depends(ge
         memberships = db.query(ProjectMember).filter(
             ProjectMember.user_id == current_user.id
         ).all()
-        project_ids = [m.project_id for m in memberships]
+        member_project_ids = [m.project_id for m in memberships]
+        assigned_project_ids = [
+            task.project_id for task in db.query(Task).filter(
+                Task.assigned_to == current_user.id
+            ).all()
+        ]
+        project_ids = list(set(member_project_ids + assigned_project_ids))
         projects = db.query(Project).filter(Project.id.in_(project_ids)).order_by(
             Project.created_at.desc()
         ).all()

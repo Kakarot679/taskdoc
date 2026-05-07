@@ -19,6 +19,11 @@ def is_project_member(db: Session, project_id: int, user_id: int) -> bool:
     ).first() is not None
 
 
+def ensure_project_member(db: Session, project_id: int, user_id: int):
+    if not is_project_member(db, project_id, user_id):
+        db.add(ProjectMember(project_id=project_id, user_id=user_id))
+
+
 @router.post("", response_model=TaskOut, status_code=201, include_in_schema=False)
 @router.post("/", response_model=TaskOut, status_code=201)
 def create_task(
@@ -34,11 +39,10 @@ def create_task(
         raise HTTPException(status_code=400, detail="Due date cannot be in the past")
 
     if body.assigned_to:
-        if not is_project_member(db, body.project_id, body.assigned_to):
-            raise HTTPException(
-                status_code=400,
-                detail="Assigned user is not a member of this project"
-            )
+        user = db.query(User).filter(User.id == body.assigned_to).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="Assigned user not found")
+        ensure_project_member(db, body.project_id, body.assigned_to)
 
     task = Task(
         title=body.title,
@@ -131,11 +135,10 @@ def update_task(
             raise HTTPException(status_code=400, detail="Due date cannot be in the past")
         task.due_date = body.due_date
     if body.assigned_to is not None:
-        if not is_project_member(db, task.project_id, body.assigned_to):
-            raise HTTPException(
-                status_code=400,
-                detail="Assigned user is not a member of this project"
-            )
+        user = db.query(User).filter(User.id == body.assigned_to).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="Assigned user not found")
+        ensure_project_member(db, task.project_id, body.assigned_to)
         task.assigned_to = body.assigned_to
 
     db.commit()

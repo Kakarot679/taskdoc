@@ -3,7 +3,7 @@ import Modal from './Modal'
 import api from '../services/api'
 
 export default function CreateTaskModal({ projectId, members, onClose, onCreated }) {
-  const [projectMembers, setProjectMembers] = useState(members || [])
+  const [assignableUsers, setAssignableUsers] = useState(members || [])
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -17,15 +17,16 @@ export default function CreateTaskModal({ projectId, members, onClose, onCreated
   const [membersLoading, setMembersLoading] = useState(false)
 
   useEffect(() => {
-    if (members?.length) {
-      setProjectMembers(members)
-      return
-    }
-
     setMembersLoading(true)
-    api.get(`/projects/${projectId}/members`)
-      .then(res => setProjectMembers(res.data))
-      .catch(() => setError('Unable to load project members for assignment.'))
+    api.get('/users/')
+      .then(res => setAssignableUsers(res.data))
+      .catch(() => {
+        if (members?.length) {
+          setAssignableUsers(members)
+          return
+        }
+        setError('Unable to load users for assignment.')
+      })
       .finally(() => setMembersLoading(false))
   }, [projectId, members])
 
@@ -139,18 +140,18 @@ export default function CreateTaskModal({ projectId, members, onClose, onCreated
               name="assigned_to"
               value={form.assigned_to}
               onChange={handleChange}
-              disabled={membersLoading || projectMembers.length === 0}
+              disabled={membersLoading || assignableUsers.length === 0}
               className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
               <option value="">
-                {membersLoading ? 'Loading members...' : projectMembers.length === 0 ? 'No members yet' : 'Unassigned'}
+                {membersLoading ? 'Loading users...' : assignableUsers.length === 0 ? 'No users yet' : 'Unassigned'}
               </option>
-              {projectMembers.map(m => (
+              {assignableUsers.map(m => (
                 <option key={m.id} value={m.id}>{m.name}</option>
               ))}
             </select>
-            {projectMembers.length === 0 && !membersLoading && (
-              <p className="text-xs text-slate-400 mt-1">Add members to this project before assigning tasks.</p>
+            {assignableUsers.length === 0 && !membersLoading && (
+              <p className="text-xs text-slate-400 mt-1">Create another user before assigning tasks.</p>
             )}
           </div>
         </div>
