@@ -1,0 +1,11 @@
+backend/venv
+backend/.venv
+backend/__pycache__
+backend/.env
+frontend/node_modules
+frontend/dist
+frontend/.vite
+node_modules
+dist
+*.log
+Project demo.mkv
