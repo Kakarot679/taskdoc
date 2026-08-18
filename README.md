@@ -173,7 +173,7 @@ Some endpoints are role-protected. For example, project creation, member managem
 
 ## Deployment Notes
 
-The live demo was on Railway's free trial, which has since run out — the instructions below still work if you're paying for Railway or reactivate the trial, but the site isn't up right now. See the free alternative further down if you want to redeploy it without a card on file.
+The live demo was on Railway's free trial, which has since run out — the instructions below still work, the site just isn't up right now.
 
 The project is set up to deploy on Railway as a small monorepo:
 
@@ -208,17 +208,6 @@ VITE_API_URL=https://your-backend-domain.up.railway.app
 ```
 
 After Railway gives public URLs to both services, update `ALLOWED_ORIGINS` with the actual frontend URL and redeploy the backend.
-
-### Free alternative: Render + Aiven
-
-Since the Railway trial is gone, here's a genuinely free path if you want this running live again — no card required on either side, as of writing:
-
-1. **Database:** [Aiven](https://aiven.io/free-tier) has an always-free MySQL plan (1 GB storage/RAM). Create a service, grab the connection details.
-2. **Backend:** a Render web service, root directory `backend`, build command `pip install -r requirements.txt`, start command `uvicorn app.main:app --host 0.0.0.0 --port $PORT`. Set the same backend variables as above, pointed at Aiven instead of Railway's MySQL. Aiven's MySQL requires TLS — the simplest way to handle that is to skip the individual `DB_HOST`/`DB_PORT`/etc. variables and set `DATABASE_URL` directly to the full connection string Aiven gives you (`db.py` already prefers `DATABASE_URL` over the individual fields if it's set, so nothing in the code needs to change).
-3. **Frontend:** a Render static site, root directory `frontend`, build command `npm run build`, publish directory `dist`. Set `VITE_API_URL` to the Render backend's URL.
-4. Update `ALLOWED_ORIGINS` on the backend to the Render frontend's URL, same as the Railway flow.
-
-Render's free web services spin down after inactivity, so the backend takes a few seconds to wake up on the first request after a quiet period.
 
 ---
 
