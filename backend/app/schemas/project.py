@@ -1,11 +1,11 @@
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional
 from datetime import datetime
 from app.schemas.user import UserBrief
 
 
 class ProjectCreate(BaseModel):
-    title: str
+    title: str = Field(max_length=200)
     description: Optional[str] = None
 
     @field_validator("title")
@@ -17,7 +17,7 @@ class ProjectCreate(BaseModel):
 
 
 class ProjectUpdate(BaseModel):
-    title: Optional[str] = None
+    title: Optional[str] = Field(default=None, max_length=200)
     description: Optional[str] = None
 
     @field_validator("title")

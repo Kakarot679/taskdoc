@@ -6,6 +6,7 @@ import StatusBadge from '../components/StatusBadge'
 import PriorityBadge from '../components/PriorityBadge'
 import CreateTaskModal from '../components/CreateTaskModal'
 import EditTaskModal from '../components/EditTaskModal'
+import TaskCommentsModal from '../components/TaskCommentsModal'
 
 function isOverdue(task) {
   if (!task.due_date || task.status === 'completed') return false
@@ -21,6 +22,8 @@ function formatDate(value) {
   })
 }
 
+const PAGE_SIZE = 20
+
 export default function TasksPage() {
   const { user, isAdmin } = useAuth()
   const [tasks, setTasks] = useState([])
@@ -29,9 +32,13 @@ export default function TasksPage() {
   const [selectedProjectId, setSelectedProjectId] = useState('')
   const [showCreateTask, setShowCreateTask] = useState(false)
   const [editingTask, setEditingTask] = useState(null)
+  const [commentsTask, setCommentsTask] = useState(null)
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState(false)
   const [error, setError] = useState('')
+  const [page, setPage] = useState(0)
+  const [totalTasks, setTotalTasks] = useState(0)
+  const [stats, setStats] = useState(null)
   const [filters, setFilters] = useState({
     search: '',
     status: 'all',
@@ -50,12 +57,15 @@ export default function TasksPage() {
     setError('')
     setLoading(true)
     try {
-      const [tasksRes, projectsRes] = await Promise.all([
-        api.get('/tasks/'),
+      const [tasksRes, projectsRes, statsRes] = await Promise.all([
+        api.get(`/tasks/?limit=${PAGE_SIZE}&offset=${page * PAGE_SIZE}`),
         api.get('/projects/'),
+        api.get('/dashboard/stats'),
       ])
-      setTasks(tasksRes.data)
+      setTasks(tasksRes.data.items)
+      setTotalTasks(tasksRes.data.total)
       setProjects(projectsRes.data)
+      setStats(statsRes.data)
       if (!selectedProjectId && projectsRes.data.length > 0) {
         setSelectedProjectId(String(projectsRes.data[0].id))
       }
@@ -68,7 +78,7 @@ export default function TasksPage() {
 
   useEffect(() => {
     fetchPageData()
-  }, [])
+  }, [page])
 
   useEffect(() => {
     if (!selectedProjectId) {
@@ -100,12 +110,12 @@ export default function TasksPage() {
     })
   }, [tasks, filters, projectById])
 
-  const counts = useMemo(() => ({
-    total: tasks.length,
-    todo: tasks.filter(t => t.status === 'todo').length,
-    inProgress: tasks.filter(t => t.status === 'in_progress').length,
-    overdue: tasks.filter(isOverdue).length,
-  }), [tasks])
+  const counts = {
+    total: stats?.total_tasks ?? 0,
+    todo: stats?.todo ?? 0,
+    inProgress: stats?.in_progress ?? 0,
+    overdue: stats?.overdue ?? 0,
+  }
 
   const handleFilterChange = e => {
     setFilters(prev => ({ ...prev, [e.target.name]: e.target.value }))
@@ -330,6 +340,14 @@ export default function TasksPage() {
                     <option value="completed">Completed</option>
                   </select>
                 )}
+                {(isAdmin || task.assigned_to === user?.id) && (
+                  <button
+                    onClick={() => setCommentsTask(task)}
+                    className="text-xs text-slate-500 hover:text-indigo-600 border border-slate-200 rounded-lg px-3 py-1.5 transition-colors"
+                  >
+                    Comments
+                  </button>
+                )}
                 {isAdmin && (
                   <>
                     <button
@@ -351,6 +369,30 @@ export default function TasksPage() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {totalTasks > PAGE_SIZE && (
+        <div className="flex items-center justify-between text-sm text-slate-500">
+          <span>
+            Showing {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, totalTasks)} of {totalTasks} tasks
+          </span>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPage(p => Math.max(0, p - 1))}
+              disabled={page === 0 || loading}
+              className="px-3 py-1.5 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-40"
+            >
+              Prev
+            </button>
+            <button
+              onClick={() => setPage(p => ((p + 1) * PAGE_SIZE < totalTasks ? p + 1 : p))}
+              disabled={(page + 1) * PAGE_SIZE >= totalTasks || loading}
+              className="px-3 py-1.5 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-40"
+            >
+              Next
+            </button>
+          </div>
         </div>
       )}
 
@@ -376,6 +418,10 @@ export default function TasksPage() {
             fetchPageData()
           }}
         />
+      )}
+
+      {commentsTask && (
+        <TaskCommentsModal task={commentsTask} onClose={() => setCommentsTask(null)} />
       )}
     </div>
   )

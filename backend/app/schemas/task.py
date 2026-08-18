@@ -1,11 +1,11 @@
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional
 from datetime import datetime, date
 from app.schemas.user import UserBrief
 
 
 class TaskCreate(BaseModel):
-    title: str
+    title: str = Field(max_length=200)
     description: Optional[str] = None
     status: Optional[str] = "todo"
     priority: Optional[str] = "medium"
@@ -36,7 +36,7 @@ class TaskCreate(BaseModel):
 
 
 class TaskUpdate(BaseModel):
-    title: Optional[str] = None
+    title: Optional[str] = Field(default=None, max_length=200)
     description: Optional[str] = None
     status: Optional[str] = None
     priority: Optional[str] = None
@@ -78,3 +78,10 @@ class TaskOut(BaseModel):
     assignee: Optional[UserBrief] = None
 
     model_config = {"from_attributes": True}
+
+
+class TaskListOut(BaseModel):
+    items: list[TaskOut]
+    total: int
+    limit: int
+    offset: int

@@ -1,10 +1,11 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import os
 from sqlalchemy.exc import OperationalError
 from app.database.db import Base, engine
-from app.models import user, project, task  # ensure models are registered
-from app.routers import auth, projects, tasks, dashboard, users
+from app.models import user, project, task, comment  # noqa: F401 - ensure models are registered
+from app.routers import auth, projects, tasks, dashboard, users, comments
 
 allowed_origins = [
     origin.strip()
@@ -15,7 +16,20 @@ allowed_origins = [
     if origin.strip()
 ]
 
-app = FastAPI(title="Taskdoc API", version="1.0.0")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    try:
+        Base.metadata.create_all(bind=engine)
+    except OperationalError as exc:
+        raise RuntimeError(
+            "Database connection failed. Start MySQL and check backend/.env "
+            "DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, and DB_NAME."
+        ) from exc
+    yield
+
+
+app = FastAPI(title="Taskdoc API", version="1.0.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -30,17 +44,7 @@ app.include_router(projects.router)
 app.include_router(tasks.router)
 app.include_router(dashboard.router)
 app.include_router(users.router)
-
-
-@app.on_event("startup")
-def create_tables():
-    try:
-        Base.metadata.create_all(bind=engine)
-    except OperationalError as exc:
-        raise RuntimeError(
-            "Database connection failed. Start MySQL and check backend/.env "
-            "DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, and DB_NAME."
-        ) from exc
+app.include_router(comments.router)
 
 
 @app.get("/")

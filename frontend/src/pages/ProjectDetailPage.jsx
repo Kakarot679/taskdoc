@@ -7,6 +7,7 @@ import PriorityBadge from '../components/PriorityBadge'
 import CreateTaskModal from '../components/CreateTaskModal'
 import EditTaskModal from '../components/EditTaskModal'
 import AddMemberModal from '../components/AddMemberModal'
+import TaskCommentsModal from '../components/TaskCommentsModal'
 
 function isOverdue(task) {
   if (!task.due_date || task.status === 'completed') return false
@@ -26,6 +27,7 @@ export default function ProjectDetailPage() {
   const [showCreateTask, setShowCreateTask] = useState(false)
   const [showAddMember, setShowAddMember] = useState(false)
   const [editingTask, setEditingTask] = useState(null)
+  const [commentsTask, setCommentsTask] = useState(null)
   const [error, setError] = useState('')
 
   const fetchAll = async () => {
@@ -36,12 +38,12 @@ export default function ProjectDetailPage() {
       setProject(projRes.data)
 
       const [tasksResult, membersResult] = await Promise.allSettled([
-        api.get(`/tasks/?project_id=${id}`),
+        api.get(`/tasks/?project_id=${id}&limit=200`),
         api.get(`/projects/${id}/members`),
       ])
 
       if (tasksResult.status === 'fulfilled') {
-        setTasks(tasksResult.value.data)
+        setTasks(tasksResult.value.data.items)
       } else {
         setTasks([])
         setError('Project loaded, but tasks could not be loaded right now.')
@@ -251,6 +253,14 @@ export default function ProjectDetailPage() {
                                 <option value="completed">Completed</option>
                               </select>
                             )}
+                            {(isAdmin || task.assigned_to === user?.id) && (
+                              <button
+                                onClick={() => setCommentsTask(task)}
+                                className="text-xs text-slate-400 hover:text-indigo-600 transition-colors"
+                              >
+                                Comments
+                              </button>
+                            )}
                             {isAdmin && (
                               <>
                                 <button
@@ -356,6 +366,9 @@ export default function ProjectDetailPage() {
           onClose={() => setShowAddMember(false)}
           onAdded={() => { setShowAddMember(false); fetchAll() }}
         />
+      )}
+      {commentsTask && (
+        <TaskCommentsModal task={commentsTask} onClose={() => setCommentsTask(null)} />
       )}
     </div>
   )

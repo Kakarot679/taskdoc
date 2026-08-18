@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List
 from app.database.db import get_db
 from app.models.user import User
-from app.schemas.user import UserBrief, UserOut, UserUpdate
+from app.schemas.user import UserBrief, UserOut, UserUpdate, RoleUpdate
 from app.middleware.auth import get_current_user, require_admin
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -36,3 +36,28 @@ def update_me(
     db.commit()
     db.refresh(current_user)
     return current_user
+
+
+@router.put("/{user_id}/role", response_model=UserBrief)
+def update_role(
+    user_id: int,
+    body: RoleUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
+    target = db.query(User).filter(User.id == user_id).first()
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if target.role == "admin" and body.role != "admin":
+        admin_count = db.query(User).filter(User.role == "admin").count()
+        if admin_count <= 1:
+            raise HTTPException(
+                status_code=400,
+                detail="Cannot demote the last remaining admin",
+            )
+
+    target.role = body.role
+    db.commit()
+    db.refresh(target)
+    return target

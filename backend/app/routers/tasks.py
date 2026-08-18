@@ -1,12 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import Optional
 from datetime import date
 from app.database.db import get_db
 from app.models.task import Task
 from app.models.project import Project, ProjectMember
 from app.models.user import User
-from app.schemas.task import TaskCreate, TaskUpdate, TaskOut
+from app.schemas.task import TaskCreate, TaskUpdate, TaskOut, TaskListOut
 from app.middleware.auth import get_current_user, require_admin
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
@@ -59,10 +59,12 @@ def create_task(
     return task
 
 
-@router.get("", response_model=List[TaskOut], include_in_schema=False)
-@router.get("/", response_model=List[TaskOut])
+@router.get("", response_model=TaskListOut, include_in_schema=False)
+@router.get("/", response_model=TaskListOut)
 def list_tasks(
     project_id: Optional[int] = None,
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -81,7 +83,11 @@ def list_tasks(
     if project_id:
         query = query.filter(Task.project_id == project_id)
 
-    return query.order_by(Task.created_at.desc()).all()
+    query = query.order_by(Task.created_at.desc())
+    total = query.count()
+    items = query.offset(offset).limit(limit).all()
+
+    return {"items": items, "total": total, "limit": limit, "offset": offset}
 
 
 @router.get("/{task_id}", response_model=TaskOut)

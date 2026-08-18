@@ -1,10 +1,10 @@
-from pydantic import BaseModel, EmailStr, field_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from datetime import datetime
 
 
 class SignupRequest(BaseModel):
-    name: str
-    email: EmailStr
+    name: str = Field(max_length=100)
+    email: EmailStr = Field(max_length=150)
     password: str
 
     @field_validator("password")
@@ -30,8 +30,8 @@ class LoginRequest(BaseModel):
 
 
 class UserUpdate(BaseModel):
-    name: str
-    email: EmailStr
+    name: str = Field(max_length=100)
+    email: EmailStr = Field(max_length=150)
 
     @field_validator("name")
     @classmethod
@@ -39,6 +39,17 @@ class UserUpdate(BaseModel):
         if not v.strip():
             raise ValueError("Name cannot be empty")
         return v.strip()
+
+
+class RoleUpdate(BaseModel):
+    role: str
+
+    @field_validator("role")
+    @classmethod
+    def valid_role(cls, v):
+        if v not in ("admin", "member"):
+            raise ValueError("Role must be 'admin' or 'member'")
+        return v
 
 
 class TokenResponse(BaseModel):

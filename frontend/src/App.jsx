@@ -8,6 +8,7 @@ import ProjectsPage from './pages/ProjectsPage'
 import ProjectDetailPage from './pages/ProjectDetailPage'
 import TasksPage from './pages/TasksPage'
 import ProfilePage from './pages/ProfilePage'
+import TeamPage from './pages/TeamPage'
 import NotFoundPage from './pages/NotFoundPage'
 
 function ProtectedRoute({ children }) {
@@ -20,6 +21,12 @@ function PublicRoute({ children }) {
   const { user, loading } = useAuth()
   if (loading) return null
   return user ? <Navigate to="/dashboard" replace /> : children
+}
+
+function AdminRoute({ children }) {
+  const { isAdmin, loading } = useAuth()
+  if (loading) return null
+  return isAdmin ? children : <Navigate to="/dashboard" replace />
 }
 
 export default function App() {
@@ -35,6 +42,7 @@ export default function App() {
             <Route path="projects" element={<ProjectsPage />} />
             <Route path="projects/:id" element={<ProjectDetailPage />} />
             <Route path="tasks" element={<TasksPage />} />
+            <Route path="team" element={<AdminRoute><TeamPage /></AdminRoute>} />
             <Route path="profile" element={<ProfilePage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Route>
