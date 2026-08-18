@@ -218,7 +218,7 @@ Since the Railway trial is gone, here's a genuinely free path if you want this r
 3. **Frontend:** a Render static site, root directory `frontend`, build command `npm run build`, publish directory `dist`. Set `VITE_API_URL` to the Render backend's URL.
 4. Update `ALLOWED_ORIGINS` on the backend to the Render frontend's URL, same as the Railway flow.
 
-Render's free web services spin down after inactivity and take a few seconds to wake back up on the next request — worth knowing if you're linking this from a resume and someone clicks it cold.
+Render's free web services spin down after inactivity, so the backend takes a few seconds to wake up on the first request after a quiet period.
 
 ---
 
